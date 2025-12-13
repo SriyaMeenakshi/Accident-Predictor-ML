@@ -8,62 +8,75 @@ import seaborn as sns
 from pathlib import Path
 
 # ---------------------------------------------------------
-# PAGE CONFIG & BACKGROUND
+# PAGE CONFIG & PROFESSIONAL DARK THEME
 # ---------------------------------------------------------
-st.set_page_config(page_title="Road Accident Risk Intelligence", page_icon="🛡️", layout="wide")
+st.set_page_config(page_title="Road Accident Risk Intelligence", page_icon="🚗", layout="wide")
 
-# High-quality "Night City/Traffic" Background
-BACKGROUND_URL = "https://images.unsplash.com/photo-1545153243-7f212239c8e2?q=80&w=2071&auto=format&fit=crop"
-
-st.markdown(f"""
+# Professional Dark Theme CSS
+st.markdown("""
     <style>
-    /* Background Image */
-    .stApp {{
-        background-image: url("{BACKGROUND_URL}");
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
-    }}
+    /* Main App Background - Dark Slate/Black */
+    .stApp {
+        background-color: #0f172a; /* Slate 900 */
+        color: #f1f5f9;
+    }
     
-    /* Overlay to make text readable */
-    .stApp::before {{
-        content: "";
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background-color: rgba(15, 23, 42, 0.85); /* Dark Blue overlay */
-        z-index: -1;
-    }}
+    /* Metrics/Card Styling */
+    div[data-testid="stMetric"] {
+        background-color: #1e293b; /* Slate 800 */
+        border: 1px solid #334155;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
     
-    /* Global Text */
-    .main {{ color: #E0E0E0; }}
-    h1, h2, h3, p, label {{ color: #f1f2f6 !important; }}
+    /* Headers */
+    h1, h2, h3 {
+        color: #f8fafc !important;
+        font-family: 'Segoe UI', sans-serif;
+    }
     
-    /* Metrics containers */
-    div[data-testid="stMetric"] {{
-        background-color: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        padding: 10px;
-        border-radius: 8px;
-        backdrop-filter: blur(5px);
-    }}
+    /* Custom Header Underline */
+    .header-style {
+        font-size: 20px;
+        font-weight: 600;
+        color: #e2e8f0;
+        margin-bottom: 15px;
+        border-bottom: 2px solid #3b82f6; /* Blue border */
+        padding-bottom: 8px;
+    }
     
-    /* Custom Header */
-    .header-style {{
-        font-size: 24px;
-        font-weight: bold;
-        color: #f1f2f6;
-        margin-bottom: 10px;
-        border-bottom: 2px solid #2e86de;
-        padding-bottom: 5px;
-    }}
+    /* Risk Levels Typography */
+    .risk-high { 
+        color: #ef4444; 
+        font-weight: 800; 
+        font-size: 42px; 
+        letter-spacing: 1px;
+    }
+    .risk-medium { 
+        color: #f59e0b; 
+        font-weight: 800; 
+        font-size: 42px; 
+        letter-spacing: 1px;
+    }
+    .risk-low { 
+        color: #22c55e; 
+        font-weight: 800; 
+        font-size: 42px; 
+        letter-spacing: 1px;
+    }
     
-    /* Risk Levels for Main Card */
-    .risk-high {{ color: #ff4757; font-weight: 800; font-size: 48px; text-shadow: 0px 0px 15px rgba(255, 71, 87, 0.6); }}
-    .risk-medium {{ color: #ffa502; font-weight: 800; font-size: 48px; text-shadow: 0px 0px 15px rgba(255, 165, 2, 0.6); }}
-    .risk-low {{ color: #2ed573; font-weight: 800; font-size: 48px; text-shadow: 0px 0px 15px rgba(46, 213, 115, 0.6); }}
+    /* Table Styling to match Dark Theme */
+    .dataframe {
+        font-size: 14px !important;
+        background-color: #1e293b !important;
+        color: white !important;
+    }
     
-    /* Comparison Table Styling */
-    .dataframe {{ font-size: 14px !important; background-color: rgba(0,0,0,0.3) !important; }}
+    /* Force image to fit container nicely */
+    img {
+        border-radius: 12px;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -103,19 +116,18 @@ df = load_raw_data()
 # ---------------------------------------------------------
 # SIDEBAR CONTROLS
 # ---------------------------------------------------------
-st.sidebar.title("🛡️ Live Input Panel")
-st.sidebar.info("Adjust conditions to see how different ML models react.")
+st.sidebar.title("🛡️ Simulation Panel")
+st.sidebar.markdown("Adjust parameters below to see how the AI predicts risk.")
 
 def get_median(col, default):
     return float(df[col].median()) if col in df.columns else default
 
-# User Inputs
-st.sidebar.markdown("### 🕒 Temporal Inputs")
-hour = st.sidebar.slider("Hour of Day", 0, 23, 18)
-day_week = st.sidebar.selectbox("Day of Week", ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"], index=0)
+st.sidebar.markdown("### 🕒 Time & Date")
+hour = st.sidebar.slider("Hour (24h)", 0, 23, 18)
+day_week = st.sidebar.selectbox("Day", ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"], index=0)
 month = st.sidebar.selectbox("Month", range(1, 13), index=10)
 
-st.sidebar.markdown("### 🛣️ Road Infrastructure")
+st.sidebar.markdown("### 🛣️ Infrastructure")
 c1, c2 = st.sidebar.columns(2)
 with c1:
     junction = st.checkbox("Junction", value=False)
@@ -126,10 +138,10 @@ with c2:
     stop = st.checkbox("Stop Sign", value=False)
     bump = st.checkbox("Speed Bump", value=False)
 
-st.sidebar.markdown("### 🌤️ Weather Conditions")
-temp = st.sidebar.slider("Temperature (°F)", -10, 110, int(get_median("Temperature(F)", 70)))
+st.sidebar.markdown("### 🌤️ Environment")
+temp = st.sidebar.slider("Temp (°F)", -10, 110, int(get_median("Temperature(F)", 70)))
 humid = st.sidebar.slider("Humidity (%)", 0, 100, int(get_median("Humidity(%)", 60)))
-wind = st.sidebar.slider("Wind Speed (mph)", 0, 100, int(get_median("Wind_Speed(mph)", 10)))
+wind = st.sidebar.slider("Wind (mph)", 0, 100, int(get_median("Wind_Speed(mph)", 10)))
 vis = st.sidebar.slider("Visibility (mi)", 0.0, 10.0, 10.0)
 pressure = st.sidebar.number_input("Pressure (in)", 20.0, 35.0, 29.0)
 
@@ -158,20 +170,13 @@ input_data = pd.DataFrame({
 })
 
 results = []
-
-# Loop through all models
 for name, model in models.items():
-    if name == "Logistic Regression":
-        final_input = scaler.transform(input_data)
-    else:
-        final_input = input_data
-    
+    final_input = scaler.transform(input_data) if name == "Logistic Regression" else input_data
     try:
         pred_idx = model.predict(final_input)[0]
         prob = model.predict_proba(final_input)[0]
         pred_label = le.inverse_transform([int(pred_idx)])[0]
         confidence = np.max(prob)
-        
         results.append({
             "Model": name,
             "Prediction": pred_label,
@@ -186,58 +191,75 @@ voting_result = res_df[res_df["Model"] == "Voting Ensemble"].iloc[0]
 final_decision = voting_result["Prediction"]
 
 # ---------------------------------------------------------
-# MAIN LAYOUT
+# MAIN UI: HEADER LAYOUT (Left Text, Right Image)
 # ---------------------------------------------------------
-st.title("🚦 AI-Driven Road Safety System")
-st.markdown("### 3-1 Semester Term Project | Machine Learning Classification")
+col_head_text, col_head_img = st.columns([2, 1])
 
-tab1, tab2, tab3 = st.tabs(["🖥️ Main Dashboard", "📊 Model Performance Analytics", "ℹ️ About"])
+with col_head_text:
+    st.title("🚦AI-Driven Road Safety System ")
+    st.markdown("Machine Learning Project - Predicting Accident Risk Levels")
+    st.markdown("""
+    This intelligent system uses **Machine Learning** to predict the risk of road accidents in real-time. 
+    By analyzing weather, time, and road conditions, it helps authorities deploy resources efficiently.
+    """)
+
+with col_head_img:
+    # High-quality tech/road image, displayed cleanly on the right
+    st.image("https://c1.wallpaperflare.com/preview/412/860/56/traffic-autos-vehicles-road.jpg", 
+             use_container_width=True)
+
+# ---------------------------------------------------------
+# TABS
+# ---------------------------------------------------------
+tab1, tab2, tab3 = st.tabs(["📊 Prediction Dashboard", "📈 Model Analytics", "ℹ️ About Project"])
 
 with tab1:
-    # --- SECTION 1: THE BIG RESULT ---
+    st.info("💡 **Dashboard View:** Shows the live prediction based on the inputs you selected in the sidebar.")
+    
+    # --- RESULT SECTION ---
     st.markdown("<div class='header-style'>System Prediction (Consensus)</div>", unsafe_allow_html=True)
     
-    col_main, col_chart = st.columns([1.5, 2.5])
-    
-    with col_main:
-        st.write("Based on the **Voting Ensemble** (RF + XGB + LR):")
-        
+    c1, c2 = st.columns([1.5, 2.5])
+    with c1:
+        st.write("Voting Ensemble Output:")
         if "High" in final_decision:
             st.markdown(f"<div class='risk-high'>HIGH RISK 🚨</div>", unsafe_allow_html=True)
-            st.error("⚠️ Advisory: Dangerous conditions. Emergency teams on standby.")
+            st.error("Advisory: Deploy emergency teams immediately.")
         elif "Medium" in final_decision:
             st.markdown(f"<div class='risk-medium'>MEDIUM RISK ⚠️</div>", unsafe_allow_html=True)
-            st.warning("⚠️ Advisory: Exercise caution. Increased traffic likely.")
+            st.warning("Advisory: Exercise caution. Standard patrols.")
         else:
             st.markdown(f"<div class='risk-low'>LOW RISK ✅</div>", unsafe_allow_html=True)
-            st.success("✅ Status: Standard driving conditions.")
+            st.success("Status: Safe driving conditions.")
 
-    with col_chart:
-        st.write("**Probability Distribution (Voting Model)**")
-        prob_data = pd.DataFrame({
-            "Risk Level": le.classes_,
-            "Probability": voting_result["Raw_Prob"]
-        })
-        fig, ax = plt.subplots(figsize=(6, 2), facecolor='none')
-        sns.barplot(x="Probability", y="Risk Level", data=prob_data, palette="viridis", ax=ax)
-        ax.set_facecolor("none")
+    with c2:
+        # Probability Chart - CLEAN DARK THEME
+        st.write("Probability Distribution (Voting Model)")
+        prob_data = pd.DataFrame({"Risk": le.classes_, "Prob": voting_result["Raw_Prob"]})
+        
+        # Transparent background for the plot
+        fig, ax = plt.subplots(figsize=(6, 2.2), facecolor='#0f172a') 
+        sns.barplot(x="Prob", y="Risk", data=prob_data, palette="viridis", ax=ax)
+        
+        # Dark theme adjustments
+        ax.set_facecolor("#0f172a") 
         ax.tick_params(colors='white')
         ax.xaxis.label.set_color('white')
         ax.yaxis.label.set_color('white')
-        for spine in ax.spines.values():
-            spine.set_edgecolor('white')
+        ax.spines['bottom'].set_color('white')
+        ax.spines['left'].set_color('white') 
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
         ax.set_xlim(0, 1)
         st.pyplot(fig)
 
-    # --- SECTION 2: THE "PROOF" (COMPARISON TABLE) ---
+    # --- TABLE SECTION ---
     st.markdown("---")
-    st.markdown("<div class='header-style'>Real-Time Model Consensus</div>", unsafe_allow_html=True)
+    st.markdown("<div class='header-style'>Model Consensus Table</div>", unsafe_allow_html=True)
+    st.write("Comparison of different AI models to ensure the final decision is accurate.")
     
     def color_risk(val):
-        color = 'white'
-        if 'High' in val: color = '#ff4757'
-        elif 'Medium' in val: color = '#ffa502'
-        elif 'Low' in val: color = '#2ed573'
+        color = '#22c55e' if 'Low' in val else '#f59e0b' if 'Medium' in val else '#ef4444'
         return f'color: {color}; font-weight: bold'
 
     st.dataframe(
@@ -247,36 +269,61 @@ with tab1:
     )
 
 with tab2:
-    st.header("Training Performance")
+    st.info("💡 **Analytics View:** Shows how well the models performed during training and what data they find most important.")
+    
+    st.header("Model Performance")
     c1, c2 = st.columns(2)
     with c1:
-        st.markdown("#### F1-Score Comparison")
+        st.markdown("**F1-Score Comparison**")
+        st.write("Higher score means better accuracy.")
         st.bar_chart(metrics_df.set_index("Model")["F1_Score"])
-    
     with c2:
-        st.markdown("#### Detailed Metrics")
+        st.markdown("**Detailed Metrics**")
+        st.write("Precision, Recall, and Accuracy data.")
         st.dataframe(metrics_df.style.highlight_max(axis=0), use_container_width=True)
 
     st.markdown("---")
-    st.markdown("#### Feature Importance (XGBoost)")
-    
-    # Feature Importance Plot with dark theme support
+    st.markdown("**Feature Importance (XGBoost)**")
+    st.write("These are the factors that most strongly influence the risk calculation.")
     xgb_model = models["XGBoost"]
-    imp_df = pd.DataFrame({
-        "Feature": input_data.columns,
-        "Importance": xgb_model.feature_importances_
-    }).sort_values(by="Importance", ascending=False).head(7)
+    imp_df = pd.DataFrame({"Feature": input_data.columns, "Importance": xgb_model.feature_importances_}).sort_values(by="Importance", ascending=False).head(8)
     
-    fig2, ax2 = plt.subplots(figsize=(10, 3), facecolor='none')
+    # Feature Importance Plot
+    fig2, ax2 = plt.subplots(figsize=(10, 3), facecolor='#0f172a')
     sns.barplot(x="Importance", y="Feature", data=imp_df, palette="magma", ax=ax2)
-    ax2.set_facecolor("none")
+    
+    ax2.set_facecolor("#0f172a")
     ax2.tick_params(colors='white')
     ax2.xaxis.label.set_color('white')
     ax2.yaxis.label.set_color('white')
-    for spine in ax2.spines.values():
-        spine.set_edgecolor('white')
+    ax2.spines['bottom'].set_color('white')
+    ax2.spines['left'].set_color('white')
+    ax2.spines['top'].set_visible(False)
+    ax2.spines['right'].set_visible(False)
+    
     st.pyplot(fig2)
 
 with tab3:
-    st.markdown("### About this ML Project")
-    st.markdown("Predictive modeling of accident severity using balanced ensemble learning techniques.")
+    st.header("📖 About the Project")
+    
+    st.markdown("""
+    ### 1. What is this project?
+    This is a **Predictive Analytics System** for Road Safety. Instead of reacting to accidents after they happen, this system uses Artificial Intelligence to predict **where and when** accidents are likely to occur based on live conditions.
+    
+    ### 2. How does it work?
+    The system follows a simple 3-step process:
+    * **Step 1 (Input):** It takes data about the **Environment** (Rain, Fog, Wind), **Time** (Rush hour, Night/Day), and **Road** (Junctions, Signals).
+    * **Step 2 (Processing):** It feeds this data into 4 different Machine Learning models (**Random Forest, XGBoost, Logistic Regression, and a Voting Ensemble**).
+    * **Step 3 (Output):** The models vote to decide if the current situation is **High Risk, Medium Risk, or Low Risk**.
+    
+    ### 3. Understanding the Sections
+    * **📊 Prediction Dashboard:** This is the main control center. You can simulate different weather/road scenarios using the sidebar and see the AI's risk prediction instantly.
+    * **📈 Model Analytics:** This section is for the technical deep-dive. It proves that the models are accurate by showing their test scores (F1-Score, Accuracy) and graphs showing which factors (like Speed or Rain) are most dangerous.
+    
+    ### 4. Why is this useful?
+    * **For Traffic Police:** They can place patrol cars at "High Risk" locations before accidents happen.
+    * **For Hospitals:** Ambulances can be put on standby during high-risk weather.
+    * **For Drivers:** Navigation apps could warn drivers to be careful in specific zones.
+    """)
+    
+    st.success("Developed by **Ch.Sriya Meenakshi, G. Divya Samhitha Varshini, I. Spandana, D. Satya Harshitha, D. Kavya Malini** | Department of CSE(AI & ML) | 3 CSM1 | GVPCEW")
